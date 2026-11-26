@@ -3,7 +3,7 @@
 
 ## WORK IN PROGRESS
 
-This is a work-in-progress port of QW for the PS2 based on the existing NQ quake-ps2 port.
+This is a work-in-progress port of QW for the PS2 based on the existing NQ quake-ps2 port (https://github.com/glampert/quake-ps2).  It's a separate project due to QuakeWorld and Quake/NQ being separate, going back to even when QW first came out in '96.  There are projects out there like ezQuake that merge the two together to have one experience, but I wanted to build off the already existing and impressive renderer that quake-ps2's author has produced.  This project is not affiliated with the quake-ps2 project at all.  It is simply using the base engine.
 
 This is a standalone QW client (no single player campaign).  The QW netcode based off Tyrquake has been grafted on to this port, and the NQ code thrown away.
 
@@ -23,6 +23,10 @@ The eventual goal is to be able to play the best QW mods (MegaTF, CA) on my PS2,
 3. Timing issue connecting to servers with dhcp enabled.  This has only occurred twice during my testing where "connecting x.x.x.x" will just spam until you reconnect.  It probably because when I test, I connect to a server automatically in autoexec.cfg.  If this happens to you, just use static ip config for now.
 4. Keyboard / mouse support hasn't been tested, it may work, but I want to focus on having a quality controller experience first
 
+### Running / Playing (for right now)
+
+This project is in its infancy, so I don't have an actual "release" yet.  The way I run it personally while I test is through the OPL "Applications" menu.  QuakeWorld is a game where you download a lot of the resources ("progs" (models), sounds, skins etc) while you connect to servers, so having the game installed to your OPL's APPS directory on HDD works best for right now.  I will eventually like to have a base ISO that can be installed where a bunch of popular mods and maps for them are included, but I'm not there yet.
+
 ### Milestones
 
 1. ~~Merge Tyrquake QW netcode~~
@@ -36,4 +40,4 @@ The eventual goal is to be able to play the best QW mods (MegaTF, CA) on my PS2,
 
 ### Building
 
-Refer to the upstream repo for in depth info, but all you should have to do is clone the repo with submodules and type ```make```
+Clone the repo with submodules and type ```make```.
