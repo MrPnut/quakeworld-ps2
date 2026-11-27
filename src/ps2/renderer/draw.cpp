@@ -603,11 +603,6 @@ void Draw_Character(int x, int y, int num)
 {
     PS2_PROFILE_SCOPED_EVENT(ps2::prof_evt::Ui);
 
-    if (y <= -8)
-    {
-        return; // totally off screen
-    }
-
     num &= 255;
     if (num == 32)
     {
@@ -620,11 +615,6 @@ void Draw_Character(int x, int y, int num)
 void Draw_String(int x, const int y, const char * str)
 {
     PS2_PROFILE_SCOPED_EVENT(ps2::prof_evt::Ui);
-
-    if (y <= -8)
-    {
-        return; // totally off screen
-    }
 
     for (; *str != '\0'; ++str, x += 8)
     {
@@ -639,6 +629,26 @@ void Draw_Pic(int x, int y, qpic_t * pic)
 {
     PS2_PROFILE_SCOPED_EVENT(ps2::prof_evt::Ui);
     DrawPic(x, y, pic, 255);
+}
+
+void Draw_SubPic(int x, int y, qpic_t * pic, int srcx, int srcy, int width, int height)
+{
+    PS2_PROFILE_SCOPED_EVENT(ps2::prof_evt::Ui);
+
+    const Texture & texture = TextureOf(pic);
+    const int left   = std::clamp(srcx, 0, static_cast<int>(texture.srcWidth));
+    const int top    = std::clamp(srcy, 0, static_cast<int>(texture.srcHeight));
+    const int right  = std::clamp(srcx + width, left, static_cast<int>(texture.srcWidth));
+    const int bottom = std::clamp(srcy + height, top, static_cast<int>(texture.srcHeight));
+    if (right == left || bottom == top)
+    {
+        return;
+    }
+
+    const ScreenRect r = ToScreen(static_cast<float>(x), static_cast<float>(y),
+                                  static_cast<float>(right - left), static_cast<float>(bottom - top));
+    ps2::rs::DrawTexturedRect(texture, r.x, r.y, r.width, r.height,
+                              left, top, right, bottom, kTexelColour);
 }
 
 // Only the setup menu's player picture is ever translated.

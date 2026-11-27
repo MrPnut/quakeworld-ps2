@@ -276,9 +276,8 @@ JACK: Draws a portion of the picture in the status bar.
 static void
 Sbar_DrawSubPic(int x, int y, qpic_t *pic, int srcx, int srcy, int width, int height)
 {
-    Draw_Pic(x, y, pic);
+    Draw_SubPic(x, y, pic, srcx, srcy, width, height);
 }
-
 
 /*
 =============
@@ -301,7 +300,7 @@ Draws one solid graphics character
 static void
 Sbar_DrawCharacter(int x, int y, int num)
 {
-    Draw_Character(x + 4, y, num);
+    Draw_Character(x, y, num);
 }
 
 /*
@@ -546,47 +545,69 @@ Sbar_DrawInventory(void)
     headsup = !(cl_sbar.value || scr_viewsize.value < 100);
     hudswap = cl_hudswap.value;	// Get that nasty float out :)
 
+	const float sbarScale = CLAMP(1.0f, scr_sbarscale.value, (float)glwidth / 320.0f);
+	const int   sbarRight = (int)((float)glwidth / sbarScale);
+
     if (!headsup)
-	Sbar_DrawPic(0, -24, sb_ibar);
-// weapons
-    for (i = 0; i < 7; i++) {
-	if (cl.stats[STAT_ITEMS] & (IT_SHOTGUN << i)) {
-	    time = cl.item_gettime[i];
-	    flashon = q_max((int)((cl.time - time) * 10), 0);
-	    if (flashon >= 10) {
-		if (cl.stats[STAT_ACTIVEWEAPON] == (IT_SHOTGUN << i))
-		    flashon = 1;
-		else
-		    flashon = 0;
-	    } else
-		flashon = (flashon % 5) + 2;
-
-	    if (headsup) {
-		if (i || vid.height > 200)
-		    Sbar_DrawSubPic((hudswap) ? 0 : (320 - 24),
-				    -68 - (7 - i) * 16,
-				    sb_weapons[flashon][i], 0, 0, 24, 16);
-
-	    } else
-		Sbar_DrawPic(i * 24, -16, sb_weapons[flashon][i]);
-
-	    if (flashon > 1)
-		sb_updates = 0;	// force update to remove flash
+	{
+		Sbar_DrawPic(0, -24, sb_ibar);
 	}
+
+	// weapons
+    for (i = 0; i < 7; i++) {
+		if (cl.stats[STAT_ITEMS] & (IT_SHOTGUN << i)) {
+			time = cl.item_gettime[i];
+			flashon = q_max((int)((cl.time - time) * 10), 0);
+			if (flashon >= 10) {
+				if (cl.stats[STAT_ACTIVEWEAPON] == (IT_SHOTGUN << i))
+				{
+					flashon = 1;
+				}
+				else
+				{
+					flashon = 0;
+				}
+			}
+			else
+			{
+				flashon = (flashon % 5) + 2;
+			}
+
+			if (headsup) {
+				if (i || vid.height > 200)
+				{
+					Sbar_DrawSubPic((hudswap) ? 0 : (sbarRight - 24),
+						-68 - (7 - i) * 16,
+						sb_weapons[flashon][i], 0, 0, 24, 16);
+				}
+			}
+			else
+			{
+				Sbar_DrawPic(i * 24, -16, sb_weapons[flashon][i]);
+			}
+
+			if (flashon > 1)
+			{
+				sb_updates = 0;	// force update to remove flash
+			}
+		}
     }
 
 // ammo counts
     for (i = 0; i < 4; i++) {
 	q_snprintf(num, sizeof(num), "%3i", cl.stats[STAT_SHELLS + i]);
-	if (headsup) {
-	    Sbar_DrawSubPic((hudswap) ? 0 : (320 - 42), -24 - (4 - i) * 11, sb_ibar, 3 + (i * 48), 0, 42, 11);
-	    if (num[0] != ' ')
-		Sbar_DrawCharacter((hudswap) ? 3 : (320 - 39), -24 - (4 - i) * 11, 18 + num[0] - '0');
-	    if (num[1] != ' ')
-		Sbar_DrawCharacter((hudswap) ? 11 : (320 - 31), -24 - (4 - i) * 11, 18 + num[1] - '0');
-	    if (num[2] != ' ')
-		Sbar_DrawCharacter((hudswap) ? 19 : (320 - 23), -24 - (4 - i) * 11, 18 + num[2] - '0');
-	} else {
+	if (headsup)
+	{
+		const int ammoX = (hudswap) ? 0 : (sbarRight - 42);
+		Sbar_DrawSubPic(ammoX, -24 - (4 - i) * 11, sb_ibar, 3 + (i * 48), 0, 42, 11);
+		if (num[0] != ' ')
+			Sbar_DrawCharacter(ammoX + 3,  -24 - (4 - i) * 11, 18 + num[0] - '0');
+		if (num[1] != ' ')
+			Sbar_DrawCharacter(ammoX + 11, -24 - (4 - i) * 11, 18 + num[1] - '0');
+		if (num[2] != ' ')
+			Sbar_DrawCharacter(ammoX + 19, -24 - (4 - i) * 11, 18 + num[2] - '0');
+	}
+	else {
 	    if (num[0] != ' ')
 		Sbar_DrawCharacter((6 * i + 1) * 8 - 2, -24, 18 + num[0] - '0');
 	    if (num[1] != ' ')
@@ -668,9 +689,10 @@ Sbar_DrawFrags(void)
 	Sbar_DrawCharacter((x + 3) * 8, -24, num[2]);
 
 	if (k == cl.playernum) {
-	    Sbar_DrawCharacter(x * 8 + 2, -24, 16);
-	    Sbar_DrawCharacter((x + 4) * 8 - 4, -24, 17);
+	    Sbar_DrawCharacter(x * 8 + 6, -24, 16);
+	    Sbar_DrawCharacter((x + 4) * 8, -24, 17);
 	}
+
 	x += 4;
     }
 }
@@ -774,29 +796,41 @@ Sbar_Draw(void)
     qboolean headsup;
     char st[512];
 
-    headsup = !(cl_sbar.value || scr_viewsize.value < 100);
-
     if (scr_con_current == vid.height)
     {
         return;
     }
 
+    if (scr_viewsize.value >= 120)
+    {
+        sb_lines = 0;
+    }
+    else if (scr_viewsize.value >= 110)
+    {
+        sb_lines = 24;
+    }
+    else
+    {
+        sb_lines = 48;
+    }
+
+    headsup = !(cl_sbar.value || scr_viewsize.value < 100);
+
     sb_updates++;
 
     GL_SetCanvas(CANVAS_SBAR);
 
-// top line
-    if (sb_lines > 24)
-    {
-        if (!cl.spectator || autocam == CAM_TRACK)
-        {
-            Sbar_DrawInventory();
-        }
+	// top line
+	if (sb_lines > 24)
+	{
+		if (!cl.spectator || autocam == CAM_TRACK)
+		{
+			Sbar_DrawInventory();
+			Sbar_DrawFrags();
+		}
+	}
 
-        if (!headsup || vid.width < 512)
-            Sbar_DrawFrags();
-    }
-// main area
+	// main area
     if (sb_lines > 0)
     {
         if (cl.spectator)
@@ -832,7 +866,7 @@ Sbar_Draw(void)
         }
     }
 
-    if (sb_lines > 0)
+    if (sb_lines > 0 && !headsup)
     {
         Sbar_MiniDeathmatchOverlay();
     }
@@ -850,12 +884,12 @@ Sbar_Draw(void)
         else
 		{
 			Sbar_DeathmatchOverlay(0);
-		}   
+		}
     }
     else if (sb_showscores)
 	{
 		Sbar_DeathmatchOverlay(0);
-	}   
+	}
     else if (sb_showteamscores)
 	{
 		Sbar_TeamOverlay();
@@ -877,28 +911,28 @@ Sbar_IntermissionNumber(int x, int y, int num, int digits, int color)
 
     l = Sbar_itoa(num, str);
     ptr = str;
-    
+
 	if (l > digits)
 	{
 		ptr += (l - digits);
 	}
-	
+
     if (l < digits)
 	{
 		x += (digits - l) * 24;
 	}
-	
+
     while (*ptr) {
 		if (*ptr == '-')
 		{
 			frame = STAT_MINUS;
 		}
-	    	
+
 		else
 		{
 			frame = *ptr - '0';
 		}
-	    	
+
 		Draw_Pic(x, y, sb_nums[color][frame]);
 		x += 24;
 		ptr++;
@@ -930,7 +964,7 @@ Sbar_TeamOverlay(void)
 
     if (!teamplay) {
 		Sbar_DeathmatchOverlay(0);
-		
+
 		return;
     }
 
@@ -948,7 +982,7 @@ Sbar_TeamOverlay(void)
     Sbar_SortTeams();
 
 	// draw the text
-    for (i = 0; i < scoreboardteams && y <= 200 - 10; i++) 
+    for (i = 0; i < scoreboardteams && y <= 200 - 10; i++)
 	{
 		k = teamsort[i];
 		tm = teams + k;
@@ -974,7 +1008,7 @@ Sbar_TeamOverlay(void)
 		{
 			pavg = tm->ptotal / tm->players;
 		}
-	    	
+
 		if (pavg < 0 || pavg > 999)
 		{
 			pavg = 999;
@@ -1034,7 +1068,7 @@ Sbar_DeathmatchOverlay(int start)
 	{
 		skip = 8;
 	}
-	
+
 	// request new ping times every two second
     if (realtime - cl.last_ping_request > 2)
 	{
@@ -1050,7 +1084,7 @@ Sbar_DeathmatchOverlay(int start)
 		pic = Draw_CachePic("gfx/ranking.lmp");
 		Draw_Pic(160 - pic->width / 2, 0, pic);
     }
-	
+
 	// scores
     Sbar_SortFrags(true);
 
@@ -1065,7 +1099,7 @@ Sbar_DeathmatchOverlay(int start)
 	{
 		y = 24;
 	}
-		
+
     if (teamplay) {
 		x = 4;
 		// 0    40 64   104   152  192
@@ -1073,7 +1107,7 @@ Sbar_DeathmatchOverlay(int start)
 		y += 8;
 		Draw_String(x, y, "\x1d\x1e\x1e\x1f \x1d\x1f \x1d\x1e\x1e\x1f \x1d\x1e\x1e\x1e\x1f \x1d\x1e\x1e\x1f \x1d\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1e\x1f");
 		y += 8;
-    } 
+    }
 	else {
 		x = 16;
 		// 0    40 64   104   152
@@ -1083,7 +1117,7 @@ Sbar_DeathmatchOverlay(int start)
 		y += 8;
     }
 
-    for (i = 0; i < l && y <= 200 - 10; i++) 
+    for (i = 0; i < l && y <= 200 - 10; i++)
 	{
 		k = fragsort[i];
 		s = &cl.players[k];
@@ -1091,14 +1125,14 @@ Sbar_DeathmatchOverlay(int start)
 		{
 			continue;
 		}
-	    	
+
 		// draw ping
 		p = s->ping;
 		if (p < 0 || p > 999)
 		{
 			p = 999;
 		}
-	    	
+
 		q_snprintf(num, sizeof(num), "%4i", p);
 		Draw_String(x, y, num);
 
@@ -1139,7 +1173,7 @@ Sbar_DeathmatchOverlay(int start)
 		{
 			total = realtime - s->entertime;
 		}
-	    	
+
 		minutes = (int)total / 60;
 		q_snprintf(num, sizeof(num), "%4i", minutes);
 		Draw_String(x + 64, y, num);
@@ -1156,7 +1190,7 @@ Sbar_DeathmatchOverlay(int start)
 		{
 			Draw_Fill(x + 104, y, 40, 4, top, 1.0f);
 		}
-	    	
+
 		Draw_Fill(x + 104, y + 4, 40, 4, bottom, 1.0f);
 
 		// draw number
@@ -1212,21 +1246,22 @@ Sbar_MiniDeathmatchOverlay(void)
     int x, y, line, numlines, top, bottom;
     int teamplay;
 
-    /* Don't bother if not enough room */
-    if (vid.width < 512 || !sb_lines)
+    const float sbarScale = CLAMP(1.0f, scr_sbarscale.value, (float)glwidth / 320.0f);
+	const int   sbarRight = (int)((float)glwidth / sbarScale);
+	if (sbarRight < 512 || !sb_lines)
 	{
 		return;
 	}
-	
+
     teamplay = atoi(Info_ValueForKey(cl.serverinfo, "teamplay"));
 
     Sbar_SortFrags(false);
-    
+
 	if (vid.width >= 640)
 	{
 		Sbar_SortTeams();
 	}
-		
+
     if (!scoreboardlines)
 	{
 		return;
@@ -1238,7 +1273,7 @@ Sbar_MiniDeathmatchOverlay(void)
 	{
 		return;
 	}
-	
+
     /* Find client in the scoreboard, if not there (spectator) display top */
     for (line = 0; line < scoreboardlines; line++)
 	{
@@ -1247,12 +1282,12 @@ Sbar_MiniDeathmatchOverlay(void)
 			break;
 		}
 	}
-		
+
     if (line == scoreboardlines)
 	{
 		line = 0;
 	}
-		
+
     /* Put the client in the centre of the displayed lines */
     line = CLAMP(0, line - numlines / 2, scoreboardlines - numlines);
 
@@ -1278,7 +1313,7 @@ Sbar_MiniDeathmatchOverlay(void)
 		Draw_Character(x + 8, y, frags[0]);
 		Draw_Character(x + 16, y, frags[1]);
 		Draw_Character(x + 24, y, frags[2]);
-	
+
 		if (playernum == cl.playernum) {
 	    	Draw_Character(x, y, 16);
 	    	Draw_Character(x + 32, y, 17);
@@ -1312,7 +1347,7 @@ Sbar_MiniDeathmatchOverlay(void)
 	{
 		return;
 	}
-		
+
     /* draw separator */
     x += 208;
     for (y = 24 - sb_lines; y < 24 - 6; y += 2)
