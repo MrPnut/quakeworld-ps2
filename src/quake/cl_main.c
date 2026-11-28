@@ -212,10 +212,9 @@ CL_SendConnectPacket(void)
 
     cls.qport = Cvar_VariableValue("qport");
 
-    Info_SetValueForStarKey(cls.userinfo, "*ip", NET_AdrToString(adr),
-			    MAX_INFO_STRING);
-
 //      Con_Printf ("Connecting to %s...\n", cls.servername);
+
+    Con_Printf("DBG: USERINFO (%d): [%s]\n", (int)strlen(cls.userinfo), cls.userinfo);
     qsnprintf(data, sizeof(data), "%c%c%c%cconnect %i %i %i \"%s\"\n",
 	      255, 255, 255, 255, PROTOCOL_VERSION, cls.qport, cls.challenge,
 	      cls.userinfo);
@@ -424,7 +423,7 @@ CL_Disconnect(void)
     scr_centertime_off = 0;
     for (i = 0; i < NUM_CSHIFTS; i++)
         cl.cshifts[i].percent = 0;
-    
+
 // if running a local server, shut it down
     if (cls.demoplayback)
 	CL_StopPlayback();
@@ -852,12 +851,12 @@ CL_ConnectionlessPacket(void)
     {
         idstring++;
     }
-	    
+
 	while (*idstring && isspace((unsigned char)idstring[strlen(idstring) - 1]))
     {
         idstring[strlen(idstring) - 1] = 0;
     }
-	    
+
 	if (!allowremotecmd && !*localid.string) {
 	    Con_Printf("===========================\n"
 		       "Command packet received from local host, but no "
@@ -1060,6 +1059,8 @@ CL_AddCommands()
 #endif
 
     CL_Input_AddCommands();
+
+    Sbar_AddCommands();
 }
 
 void

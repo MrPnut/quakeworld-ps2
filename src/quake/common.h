@@ -467,7 +467,7 @@ extern qboolean		standard_quake, rogue, hipnotic;
 extern qboolean		fitzmode;
 	/* if true, run in fitzquake mode disabling custom quakespasm hacks */
 
-#define	MAX_INFO_STRING 256
+#define	MAX_INFO_STRING 1024
 #define	MAX_SERVERINFO_STRING 1024
 #define	MAX_LOCALINFO_STRING 32768
 

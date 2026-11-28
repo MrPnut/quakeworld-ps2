@@ -581,7 +581,8 @@ void Draw_NewGame()
     W_LoadWadFile();
     LoadPics();
     SCR_LoadPics();
-        
+    Sbar_Init();
+
     for (int i = 0; i < s_numCachedPics; ++i)
     {
         FreePic(s_cachedPics[i].pic);

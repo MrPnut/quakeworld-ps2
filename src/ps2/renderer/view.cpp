@@ -106,8 +106,8 @@ constexpr float kNearClip = 4.0f;
 // (glquake.h's BACKFACE_EPSILON, a double there).
 constexpr float kBackfaceEpsilon = static_cast<float>(BACKFACE_EPSILON);
 
-// Vertices a pass gathers before it flushes a batch to VU1: 768 whole triangles.
-constexpr int kBatchMaxVerts = 3 * 768;
+// Vertices a pass gathers before it flushes a batch to VU1: 2048 whole triangles.
+constexpr int kBatchMaxVerts = 3 * 2048;
 
 // The GS modulate identity at full alpha: what a texel draws at unchanged.
 constexpr u32 kModulateIdentity = vu1::PackColorRGBA(128, 128, 128, 0x80);
